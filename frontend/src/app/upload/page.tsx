@@ -15,7 +15,10 @@ export interface Classes {
 export default function Home() {
 
   const [selectedImage, setSelectedImage] = useState<Blob>(new Blob());
+
   const [isImageSelected, setIsImageSelected] = useState<boolean>(false);
+  const [isArchiveSelected, setIsArchiveSelected] = useState<boolean>(false);
+
   const [useLabel, setUseLabel] = useState<boolean>(false);
   const [showConf, setShowConf]  = useState<boolean>(false);
   
@@ -23,25 +26,37 @@ export default function Home() {
   
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
-  const [responseText, setResponseText] = useState<Classes>(JSON.parse('{"adj": 0, "int": 0, "geo": 0, "pro": 0, "non": 0}'));
-
   const imageChange = (e: ChangeEvent<HTMLInputElement>) => {
 
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedImage(e.target.files[0]);
-      setIsImageSelected(true);
+      const file = e.target.files[0];
+      console.log(file.type);
+
+      const valid = ["zip","application/octet-stream","application/zip","application/x-zip","application/x-zip-compressed"]
+
+      if (valid.includes(file.type)) {
+        setSelectedImage(file);
+        setIsImageSelected(false);
+        setIsArchiveSelected(true);
+        console.log("archive selected")
+      } else {
+        setSelectedImage(file);
+        setIsImageSelected(true);
+        setIsArchiveSelected(false);
+        console.log("image selected")
+      }
     }
   };
 
   const removeSelectedImage = () => {
     setSelectedImage(new Blob());
     setIsImageSelected(false);
-    setResponseText(JSON.parse('{"adj": 0, "int": 0, "geo": 0, "pro": 0, "non": 0}'))
+    setIsArchiveSelected(false);
 
     const element = document.getElementById('get_image_input');
-    
+
     element?.focus();
-    element?.classList.remove("clear-input--touched")
+    element?.classList.remove("clear-input--touched");
   };
 
   const handleUseLabelChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -53,13 +68,28 @@ export default function Home() {
   };
 
 
+
   const handleSubmit = () => {
 
-    if (!isImageSelected)
+    if (!isImageSelected && !isArchiveSelected)
       return
 
     setSended(true);
 
+    if (isImageSelected) {
+      handleImageSubmit();
+      return
+    }
+    if (isArchiveSelected) {
+      handleArchiveSubmit();
+      return
+    }
+
+    console.error("Cant decide what selected archive or image")
+
+  };
+
+  const handleImageSubmit = () => {
     let formData = new FormData();
 
     formData.append('file', selectedImage);
@@ -67,35 +97,39 @@ export default function Home() {
     formData.append('shof_conf', showConf.toString());
 
     const result = fetch('/api/v1/test/upload', {
-      method: 'POST',
-      body: formData,
-    });
+        method: 'POST',
+        body: formData,
+      });
 
     result.then((response) => {
-      let text = response.statusText;  
-      console.log(text);
-      let res = text.split(' ');
-      console.log(res)
+      return response.blob();
+    })
+    .then((blob) => {
+      setSelectedImage(blob);
+      // setIsImageSelected(true);
+      setSended(false);
+    });
+  }
 
-      let classes: Classes = {adj: Number(res[0]), 
-        int: Number(res[1]),
-        geo: Number(res[2]),
-        pro: Number(res[3]),
-        non: Number(res[4])
-      }
-      
-      console.log(classes)
+  const handleArchiveSubmit = () => {
+    let formData = new FormData();
 
-      setResponseText(classes);
-     
+    formData.append('file', selectedImage);
+
+    const result = fetch('/api/v1/test/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+    result.then((response) => {
       return response.blob();
     })
     .then((blob) => {
       setSelectedImage(blob);
       setSended(false);
     });
+  }
 
-  };
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
@@ -107,7 +141,7 @@ export default function Home() {
         
         <div className="w-80 sm:w-96 rounded overflow-hidden shadow-lg">
           
-          <FileSelect isImageSelected={isImageSelected} handleImageChange={imageChange} selectedImage={selectedImage}/>
+          <FileSelect isSended={sended} isImageSelected={isImageSelected} handleImageChange={imageChange} selectedImage={selectedImage}/>
 
           <div className="mt-4 flex justify-around">
             { !sended && <button onClick={removeSelectedImage} className="inline-block bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">Сбросить</button>}
@@ -124,7 +158,7 @@ export default function Home() {
           
           
           <button onClick={toggleSidebar} className="fixed top-4 right-4 inline-block bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded">Меню</button>
-          <Extrabar responseText={responseText} toggleSidebar={toggleSidebar} showSidebar={showSidebar}/>
+          <Extrabar toggleSidebar={toggleSidebar} showSidebar={showSidebar}/>
 
         </div>
       </div>
