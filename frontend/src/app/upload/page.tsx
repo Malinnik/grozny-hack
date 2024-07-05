@@ -96,7 +96,7 @@ export default function Home() {
     formData.append('use_label', useLabel.toString());
     formData.append('shof_conf', showConf.toString());
 
-    const result = fetch('/api/v1/test/upload', {
+    const result = fetch('/api/v1/image/upload', {
         method: 'POST',
         body: formData,
       });
@@ -116,7 +116,7 @@ export default function Home() {
 
     formData.append('file', selectedImage);
 
-    const result = fetch('/api/v1/test/upload', {
+    const result = fetch('/api/v1/archive/upload', {
         method: 'POST',
         body: formData,
       });
