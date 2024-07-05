@@ -4,11 +4,13 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 from miniopy_async import Minio
+from ultralytics import YOLO
 
 from core.orm import Base
 
 
 services = {}
+models = {}
 
 async def __create_db_engine() -> AsyncEngine:
     return create_async_engine(
@@ -40,17 +42,20 @@ async def __init_bucket(s3: Minio):
         await s3.make_bucket("data", os.getenv("S3_REGION", 'ru_1'))
 
 
+async def __init_model() -> YOLO:
+    return YOLO("best.pt")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     # On startup
-    engine = await __create_db_engine()
-    services['db_engine'] = engine
-    await __create_db_tables(engine)
+    services['db_engine'] = await __create_db_engine()
+    await __create_db_tables(services['db_engine'])
 
-    s3_client  = await __create_s3_client()
-    services['s3_client'] = s3_client
-    await __init_bucket(s3_client)
+    services['s3_client'] = await __create_s3_client()
+    await __init_bucket(services['s3_client'])
+
+    models['detector'] = await __init_model()
 
     yield
     # On shutdown 

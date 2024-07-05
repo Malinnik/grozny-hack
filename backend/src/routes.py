@@ -1,7 +1,10 @@
 import io
 import zipfile
+import PIL
+import PIL.Image
 import aiohttp
 import uuid
+import cv2
 from fastapi import APIRouter, File, Response, UploadFile, Form
 
 from fastapi.responses import StreamingResponse
@@ -9,13 +12,14 @@ from loguru import logger
 from miniopy_async import Minio
 
 from annotations.objects import ImageAddDTO
+from common.neuro import predict_image
 from common.db.pg_image import add_image_to_db, get_image_path
-from core.services import services
+from core.services import services, models
 
 
 router = APIRouter()
 
-@router.post("/v1/test/upload", tags=["Test"])
+@router.post("/v1/archive/upload", tags=["Test"])
 async def create_upload_file(file: UploadFile = File(...), use_label: bool = Form(False), shof_conf: bool = Form(False)):
     try:
         contents = await file.read()
@@ -37,6 +41,39 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         await s3.put_object("data", filename, io.BytesIO(contents), len(contents))
         
         return Response(contents, media_type="image/*")
+    except Exception as e:
+        logger.exception(e)
+        return Response(status_code=500)
+
+
+
+
+
+@router.post("/v1/image/upload", tags=["Test"])
+async def create_upload_file(file: UploadFile = File(...), use_label: bool = Form(False), shof_conf: bool = Form(False)):
+    try:
+        contents = await file.read()
+        
+        img = PIL.Image.open(io.BytesIO(contents))
+        img = await predict_image(img, models['detector'], use_label=use_label, show_conf=shof_conf)
+
+        contents = io.BytesIO()
+        img.save(contents, format="PNG")
+        contents.seek(0)
+
+        s3:Minio = services['s3_client']
+        id: uuid.UUID = uuid.uuid4()
+
+        filename = str(id) + '.png'
+        
+
+        await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
+        await s3.put_object("data", filename, contents, contents.getbuffer().nbytes)
+        contents.seek(0)
+
+        contents = contents.read()
+        return Response(contents, media_type="image/*")
+    
     except Exception as e:
         logger.exception(e)
         return Response(status_code=500)
