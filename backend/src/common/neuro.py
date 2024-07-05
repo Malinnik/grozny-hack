@@ -72,7 +72,6 @@ async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
     conf = f"{int(conf*100)}%"
 
     b = box.xyxy[0]
-    c = box.cls
 
     if not use_label and not show_conf:
         annotator.box_label(b, '', label_to_color[int(cls)])    

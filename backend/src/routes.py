@@ -54,24 +54,25 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
     try:
         contents = await file.read()
         
-        img = PIL.Image.open(io.BytesIO(contents))
-        img = await predict_image(img, models['detector'], use_label=use_label, show_conf=shof_conf)
+        with PIL.Image.open(io.BytesIO(contents)) as img:
+            img = await predict_image(img, models['detector'], use_label=use_label, show_conf=shof_conf)
 
-        contents = io.BytesIO()
-        img.save(contents, format="PNG")
-        contents.seek(0)
+            contents = io.BytesIO()
+            img.save(contents, format="PNG")
+            contents.seek(0)
 
-        s3:Minio = services['s3_client']
-        id: uuid.UUID = uuid.uuid4()
+            s3:Minio = services['s3_client']
+            id: uuid.UUID = uuid.uuid4()
 
-        filename = str(id) + '.png'
-        
+            filename: str = f"{id}.png"
+            logger.debug(f"{filename=}")
 
-        await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
-        await s3.put_object("data", filename, contents, contents.getbuffer().nbytes)
-        contents.seek(0)
+            await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
+            await s3.put_object("data", filename, contents, contents.getbuffer().nbytes)
+            contents.seek(0)
 
-        contents = contents.read()
+            contents = contents.read()
+            
         return Response(contents, media_type="image/*")
     
     except Exception as e:
