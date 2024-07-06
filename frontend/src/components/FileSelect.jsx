@@ -1,5 +1,5 @@
 
-const FileSelect = ({isImageSelected = false, handleImageChange, selectedImage}) => {
+const FileSelect = ({isSended = false, isImageSelected = false, handleImageChange, selectedImage}) => {
     return (
         <div>
             {!isImageSelected &&
@@ -11,7 +11,7 @@ const FileSelect = ({isImageSelected = false, handleImageChange, selectedImage})
               file:disabled:opacity-50 file:disabled:pointer-events-none
               file:border file:border-blue-500 hover:border-transparent rounded
               file:text-blue-700 file:bg-white" 
-              id="get_image_input" type="file" name="image" accept="image/*" onChange={handleImageChange} />
+              disabled={isSended} id="get_image_input" type="file" name="image" accept="image/*,zip,application/octet-stream,application/zip,application/x-zip,application/x-zip-compressed" onChange={handleImageChange} />
             }
             {isImageSelected && (
               <>
