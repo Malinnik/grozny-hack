@@ -1,3 +1,4 @@
+from itertools import repeat
 import PIL
 import PIL.Image
 
@@ -101,7 +102,7 @@ async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
 
 
 
-async def predict_image(img: PIL.Image.Image, classificator, model: YOLO = YOLO('best.pt'), conf: float = 0.02, use_label: bool = False, show_conf: bool = False):
+async def predict_image(img: PIL.Image.Image, filename: str, classificator, model: YOLO = YOLO('best.pt'), conf: float = 0.02, use_label: bool = False, show_conf: bool = False):
     result = model.predict(img, conf=conf)
 
     classes = result[0].boxes.data[:, -1]
@@ -111,17 +112,15 @@ async def predict_image(img: PIL.Image.Image, classificator, model: YOLO = YOLO(
 
 
     dict_crops = extract_crops(result)
-    logger.debug(f"{dict_crops=}")
+    list_predictions = []
     with torch.no_grad():
         for img_name, batch_images_cls in dict_crops.items():
             # if len(batch_images_cls) > classificator_config.batch_size:
             num_packages_cls = np.ceil(len(batch_images_cls) / BATCH_SIZE).astype(
                 np.int32)
-            logger.debug(f"{num_packages_cls=}")
             for j in range(num_packages_cls):
                 batch_images_cls = batch_images_cls[1 * j:
                                                     BATCH_SIZE * (1 + j)]
-                logger.debug(f"{batch_images_cls.shape=}")
                 logits = classificator(batch_images_cls)
 
                 probabilities = torch.nn.functional.softmax(logits, dim=1)
@@ -132,17 +131,17 @@ async def predict_image(img: PIL.Image.Image, classificator, model: YOLO = YOLO(
                 classes = classes.cpu().numpy().ravel()
 
                     
-                # class_names = [mapping[top_class_idx[idx]] for idx, _ in enumerate(batch_images_cls)]
+                class_names = [class_to_text[classes[idx]] for idx, _ in enumerate(batch_images_cls)]
 
-                # list_predictions.extend([[name, cls, prob] for name, cls, prob in
-                #                             zip(repeat(img_name, len(class_names)), class_names, top_p)])
+                list_predictions.extend([[name, cls, prob] for name, cls, prob in
+                                            zip(repeat(filename, len(class_names)), class_names, top_p)])
 
 
     for i in range(len(classes)):
         img = await bbox(img, classes[i], box=result[0].boxes[i], conf=confs[i], use_label=use_label, show_conf=show_conf)
 
 
-    return img
+    return [img, list_predictions]
 
 
 def extract_crops(results: list, imgsz=[640,640]) -> dict[str, torch.Tensor]:
