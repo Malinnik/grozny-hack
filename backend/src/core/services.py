@@ -41,6 +41,8 @@ async def __create_s3_client() -> Minio:
 async def __init_bucket(s3: Minio):
     if not await s3.bucket_exists("data"):
         await s3.make_bucket("data", os.getenv("S3_REGION", 'ru_1'))
+    if not await s3.bucket_exists("submissions"):
+        await s3.make_bucket("submissions", os.getenv("S3_REGION", 'ru_1'))
 
 
 async def __init_model() -> YOLO:
