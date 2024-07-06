@@ -1,16 +1,8 @@
-
-
-
-
-
-
-
-
 from loguru import logger
 from sqlalchemy import delete, insert, select, update
 from annotations.objects import SubmissionAddDTO, SubmissionUpdateDTO
 from core.orm import SubmissionsModel
-from core.services import services, AsyncEngine
+from core.services import services
 
 async def add_submission(submission: SubmissionAddDTO):
     query = insert(SubmissionsModel).values(submission.to_dict()).returning(SubmissionsModel.id)
