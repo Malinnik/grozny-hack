@@ -25,26 +25,42 @@
     "queries": [
 	[
 	    "badger",
-	    "a badger walks in forest"
+	    "a badger walks in forest",
+	    "badger lies on ground",
+	    "badger hides in forest and looks for food",
+	    "a small and cute badger",
+	    "a badger walks in darkness",
+	    "a nice-looking badger walks",
+	    "badger in dark woods",
+	    "badger in darkness looks with bright eyes"
 	],
 	[
 	    "bear",
 	    "a bear",
 	    "bear looks for food",
 	    "a bear lays on ground",
-	    "a bear in darkness flashes with it's eyes"
+	    "a bear in darkness flashes with it's eyes",
+	    "bear in darkness looks for prey"
 	],
 	[
 	    "bison",
-
+	    "a bison walks in nature",
+	    "a bison eats grass"
 	],
 	[
 	    "cat",
 	    "a wild cat",
 	    "wild cat crawles in forest",
+	    "a wild cat in darkness searches for prey",
+	    "a cat in darkness",
+	    "gray cat crawles in woods",
+	    "a wild cat crawles in glass"
 	],
 	[
-	    "dog"
+	    "dog",
+	    "dog in forest",
+	    "wild big dog in forest looks for prey",
+	    "dog in forest lays on ground amongst grass"
 	],
 	[
 	    "fox",
@@ -56,16 +72,42 @@
 	    "a dark creature resembling fox"
 	],
 	[
-	    "goral"
+	    "goral",
+	    "a goat-like goral in grass",
+	    "goral walks in woods",
+	    "a goral looking like small deer in forest",
+	    "a goral looking like small deer in darkness",
+	    "a goral looking like small deer flashes with eyes in darkness"
 	],
 	[
-	    "hare"
+	    "a hare",
+	    "a hare in darkness",
+	    "a wild gray hare with ears in forest",
+	    "a wild gray hare with ears in darkness at night",
+	    "gray hare with ears at night flashes with eyes",
+	    "hare in grass in darkness",
+	    "hare in grass"
 	],
 	[
-	    "lynx"
+	    "a lynx",
+	    "an orange lynx",
+	    "an orange lynx with ears",
+	    "a lynx with spotted color",
+	    "a gray lynx looking for prey",
+	    "a big lynx standing",
+	    "lynx walking in darkness",
+	    "lynx in darkness",
+	    "lynx in darkness with bright eyes",
+	    "lynx looks up and sniffs"
 	],
 	[
-	    "marten"
+	    "marten",
+	    "small marten in woods",
+	    "marten in grass",
+	    "small brown marten in forest",
+	    "brown marten in forest runs",
+	    "marten in darkness shines with it's eyes",
+	    "a small long and brown marten in forest"
 	],
 	[
 	    "a moose",
@@ -82,25 +124,61 @@
 	    "mountain goat",
 	    "a mountain goat amongst rocks",
 	    "mountain goat in darkness",
-	    "mountain goat in night vision camera"
+	    "mountain goat in night vision camera",
+	    "mountain goat with horns in woods",
+	    "mountain goat eats grass",
+	    "mountain goat with beard and horns stands"
 	],
 	[
-	    "musk deer"
+	    "musk deer",
+	    "a musk deer with teeths in forest",
+	    "a musk deer with 4 legs eats grass",
+	    "a musk deer with teeth in forest at night",
+	    "musk deer looking creature runs"
 	],
 	[
-	    "racoon dog"
+	    "racoon dog",
+	    "a racoon dog hides in forest",
+	    "a cute black-white racoon dog runs",
+	    "cute racoon at night",
+	    "racoon lays between grass and woods"
 	],
 	[
-	    "red deer"
+	    "red deer",
+	    "red deer with horns stands in forest",
+	    "big magnificent red deer with horns",
+	    "red deer with horns eats grass",
+	    "red deer in forest",
+	    "red deer in night walks",
+	    "red deer in darkness flashes with eyes"
 	],
 	[
-	    "roe deer"
+	    "roe deer",
+	    "roe deer stands in forest",
+	    "small cute roe deer in forest",
+	    "cute roe deer with little horns stays on grass",
+	    "roe deer with little horns feeds on grass",
+	    "roe deer with dotted body and white back feeds on grass",
+	    "roe deer with dotted body and white back in forest",
+	    "small roe deer in darkness",
+	    "small cute roe deer in darkness with bright eyes"
 	],
 	[
 	    "snow leopard",
+	    "magnificent snow leopard walks in snow",
+	    "magnificent snow leopard calmly looks for prey",
+	    "white dotted snow leopard with tail looks for prey in snow",
+	    "snow leopard walks in winter forest"
 	],
 	[
 	    "squirrel",
+	    "small red squirrel",
+	    "small gray squirrel",
+	    "small gray squirrel stays on floor",
+	    "small gray squirrelstays on floor in forest",
+	    "gray squirrel stays on ground",
+	    "squirrel in forest",
+	    "squirrel in darkness"
 	],
 	[
 	    "an orange tiger",
@@ -114,10 +192,21 @@
 	    "a gray wolf looking for prey",
 	    "a big wolf standing",
 	    "wolf walking in darkness",
-	    "wolf in darkness"
+	    "wolf in darkness",
+	    "wolf in darkness with bright eyes",
+	    "wolf looks up and sniffs"
 	],
 	[
-	    "a wolverine"
+	    "a wolverine",
+	    "a brown wolverine with magnificent tail",
+	    "a brown wolverine with light head and magnificent tail in forest",
+	    "a brown wolverine walks in forest",
+	    "wolverine runs in forest",
+	    "wolverine searches for prey",
+	    "brown wolverine searches for prey in woods",
+	    "brown wolverine searches for prey in dark woods",
+	    "wolverine walks in darkness"
+
 	]
     ]
 }
