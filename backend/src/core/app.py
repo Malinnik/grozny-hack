@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
-from routes import router
+from routes.routes import router
+from routes.submissions import submission
 from core.services import lifespan
 
 
@@ -14,6 +15,7 @@ def create_app():
         )
 
     app.include_router(router, prefix="/api")
+    app.include_router(submission, prefix="/api")
 
     return app
 

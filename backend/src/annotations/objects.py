@@ -74,6 +74,34 @@ class Submission(BaseModel):
             "status": self.status,
     }
 
+    def to_response(self):
+        return {
+            "id": self.id,
+            "bucket": self.bucket,
+            "path": self.path,
+            "created_at": str(self.created_at.strftime("%d-%m-%Y %H:%M:%S")),
+            "status": self.status,
+    }
+
+
+
+class RegistrationAddDTO(BaseModel):
+    name_folder: str
+    detection_class: str
+    date_registration_start: datetime
+    date_registration_end: datetime
+    count: int
+
+    def to_dict(self):
+        return {
+            "name_folder": self.name_folder,
+            "detection_class": self.detection_class,
+            "date_registration_start": str(self.date_registration_start),
+            "date_registration_end": str(self.date_registration_end),
+            "count": self.count,
+    }
+
+
 
 class Ok(BaseModel):
     ok: str = "Ok"
