@@ -2,6 +2,8 @@ from itertools import repeat
 import PIL
 import PIL.Image
 
+import json
+
 import cv2
 from loguru import logger
 import numpy as np
@@ -73,69 +75,6 @@ class_to_text = {
     20:"Wolverine"
 }
 
-labels = [
-    # "Badger",
-    # "Bear",
-    # "Bison",
-    # "Cat",
-    # "Dog",
-    # "Empty",
-    # "Fox",
-    # "Goral",
-    # "Hare",
-    # "Lynx",
-    # "Marten",
-    # "Moose",
-    # "Mountain_Goat",
-    # "Musk_Deer",
-    # "Racoon_Dog",
-    # "Red_Deer",
-    # "Roe_Deer",
-    # "Snow_Leopard",
-    # "Squirrel",
-    "Tiger",
-    "Wolf",
-    # "Wolverine"
-]
-
-queries = [
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	# [],
-	[
-	    "an orange tiger",
-	    "tiger walking in snow",
-	    "big tiger staying",
-	    "a calm tiger looking for prey",
-	    "a realistic tiger looking around"
-	],
-	[
-	    "a wolf",
-	    "a gray wolf looking for prey",
-	    "a big wolf standing",
-	    "wolf walking in darkness",
-	    "wolf in darkness"
-	],
-	# [
-
-	# ]
-]
 
 
 
@@ -171,7 +110,10 @@ async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
         
 @torch.no_grad()
 async def predict_with_clip(img: PIL.Image.Image, filename: str, clip_model, preprocessor, model, use_label: bool = False, show_conf:bool = False):
-
+    with open("config.json", 'r') as file:
+        config = json.loads(file.read())
+        queries = config["queries"]
+        labels  = config["labels"]
 
     tokenized_queries = [clip.tokenize(query).to(0) for query in queries]
     text_embeddings = [clip_model.encode_text(tq) for tq in tokenized_queries]
