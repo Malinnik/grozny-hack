@@ -5,7 +5,6 @@
 	"Bison",
 	"Cat",
 	"Dog",
-	"Empty",
 	"Fox",
 	"Goral",
 	"Hare",
@@ -24,25 +23,85 @@
 	"Wolverine"
     ],
     "queries": [
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
-	[],
+	[
+	    "badger",
+	    "a badger walks in forest"
+	],
+	[
+	    "bear",
+	    "a bear",
+	    "bear looks for food",
+	    "a bear lays on ground",
+	    "a bear in darkness flashes with it's eyes"
+	],
+	[
+	    "bison",
+
+	],
+	[
+	    "cat",
+	    "a wild cat",
+	    "wild cat crawles in forest",
+	],
+	[
+	    "dog"
+	],
+	[
+	    "fox",
+	    "a nice fox plays in forest",
+	    "fox sits",
+	    "an orange fox",
+	    "a fox is running in woods",
+	    "a fox with bright eyes in darkness",
+	    "a dark creature resembling fox"
+	],
+	[
+	    "goral"
+	],
+	[
+	    "hare"
+	],
+	[
+	    "lynx"
+	],
+	[
+	    "marten"
+	],
+	[
+	    "a moose",
+	    "a mature moose walks in forest",
+	    "moose stands and eats grass in woods",
+	    "a big brown moose",
+	    "black brown moose",
+	    "moose walks in dark",
+	    "a dark creature resembling moose in darkness",
+	    "moose with bright eyes in darkness",
+	    "a moose with horns"
+	],
+	[
+	    "mountain goat",
+	    "a mountain goat amongst rocks",
+	    "mountain goat in darkness",
+	    "mountain goat in night vision camera"
+	],
+	[
+	    "musk deer"
+	],
+	[
+	    "racoon dog"
+	],
+	[
+	    "red deer"
+	],
+	[
+	    "roe deer"
+	],
+	[
+	    "snow leopard",
+	],
+	[
+	    "squirrel",
+	],
 	[
 	    "an orange tiger",
 	    "tiger walking in snow",
@@ -58,7 +117,7 @@
 	    "wolf in darkness"
 	],
 	[
-
+	    "a wolverine"
 	]
     ]
 }
