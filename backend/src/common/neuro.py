@@ -1,10 +1,17 @@
 import PIL
 import PIL.Image
 
+import cv2
 from loguru import logger
 import numpy as np
+
+import torch
+from torchvision.transforms.functional import normalize
+
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
+
+from pathlib import Path
 
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
@@ -62,6 +69,11 @@ class_to_text = {
     20:"Wolverine"
 }
 
+MEAN = [123.675, 116.28, 103.535]
+STD = [58.395, 57.12, 57.375]
+
+BATCH_SIZE  =  8
+
 async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
 
     img_np = np.array(img)
@@ -89,7 +101,7 @@ async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
 
 
 
-async def predict_image(img: PIL.Image.Image, model: YOLO = YOLO('best.pt'), conf: float = 0.02, use_label: bool = False, show_conf: bool = False):
+async def predict_image(img: PIL.Image.Image, classificator, model: YOLO = YOLO('best.pt'), conf: float = 0.02, use_label: bool = False, show_conf: bool = False):
     result = model.predict(img, conf=conf)
 
     classes = result[0].boxes.data[:, -1]
@@ -98,8 +110,59 @@ async def predict_image(img: PIL.Image.Image, model: YOLO = YOLO('best.pt'), con
 
 
 
+    dict_crops = extract_crops(result)
+    logger.debug(f"{dict_crops=}")
+    with torch.no_grad():
+        for img_name, batch_images_cls in dict_crops.items():
+            # if len(batch_images_cls) > classificator_config.batch_size:
+            num_packages_cls = np.ceil(len(batch_images_cls) / BATCH_SIZE).astype(
+                np.int32)
+            logger.debug(f"{num_packages_cls=}")
+            for j in range(num_packages_cls):
+                batch_images_cls = batch_images_cls[1 * j:
+                                                    BATCH_SIZE * (1 + j)]
+                logger.debug(f"{batch_images_cls.shape=}")
+                logits = classificator(batch_images_cls)
+
+                probabilities = torch.nn.functional.softmax(logits, dim=1)
+                top_p, classes = probabilities.topk(1, dim=1)
+
+                # Locate torch Tensors to cpu and convert to numpy
+                top_p = top_p.cpu().numpy().ravel()
+                classes = classes.cpu().numpy().ravel()
+
+                    
+                # class_names = [mapping[top_class_idx[idx]] for idx, _ in enumerate(batch_images_cls)]
+
+                # list_predictions.extend([[name, cls, prob] for name, cls, prob in
+                #                             zip(repeat(img_name, len(class_names)), class_names, top_p)])
+
+
     for i in range(len(classes)):
         img = await bbox(img, classes[i], box=result[0].boxes[i], conf=confs[i], use_label=use_label, show_conf=show_conf)
 
 
     return img
+
+
+def extract_crops(results: list, imgsz=[640,640]) -> dict[str, torch.Tensor]:
+    dict_crops = {}
+    for res_per_img in results:
+        if len(res_per_img) > 0:
+            crops_per_img = []
+            for box in res_per_img.boxes:
+                x0, y0, x1, y1 = box.xyxy.cpu().numpy().ravel().astype(np.int32)
+                crop = res_per_img.orig_img[y0: y1, x0: x1]
+
+                # Do squared crop
+                # crop = letterbox(img=crop, new_shape=config.imgsz, color=(0, 0, 0))
+                crop = cv2.resize(crop, imgsz, interpolation=cv2.INTER_LINEAR)
+
+                # Convert Array crop to Torch tensor with [batch, channels, height, width] dimensions
+                crop = torch.from_numpy(crop.transpose(2, 0, 1))
+                crop = crop.unsqueeze(0)
+                crop = normalize(crop.float(), mean=MEAN, std=STD)
+                crops_per_img.append(crop)
+
+            dict_crops[Path(res_per_img.path).name] = torch.cat(crops_per_img) # if len(crops_per_img) else None
+    return dict_crops
