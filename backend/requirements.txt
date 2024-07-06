@@ -1,16 +1,15 @@
-torch
-torchvision
-torchaudio
---extra-index-url https://download.pytorch.org/whl/cu118
 asyncpg==0.29.0
+clip-openai==1.0.post20230121
+dill==0.3.8
 fastapi==0.111.0
 loguru==0.7.2
 miniopy-async==1.20.1
 pydantic==2.7.4
+python-dotenv==1.0.1
 SQLAlchemy==2.0.31
 SQLAlchemy-Utils==0.41.2
+timm==0.9.16
 # torch==2.3.1+cu118
 # torchaudio==2.3.1+cu118
 # torchvision==0.18.1+cu118
 ultralytics==8.2.49
-timm==0.9.16
