@@ -125,7 +125,7 @@ export default function Home() {
       return response.blob();
     })
     .then((blob) => {
-      setSelectedImage(blob);
+      // setSelectedImage(blob);
       setSended(false);
     });
   }

@@ -1,4 +1,6 @@
 import os
+import clip
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
@@ -41,6 +43,8 @@ async def __create_s3_client() -> Minio:
 async def __init_bucket(s3: Minio):
     if not await s3.bucket_exists("data"):
         await s3.make_bucket("data", os.getenv("S3_REGION", 'ru_1'))
+    if not await s3.bucket_exists("submissions"):
+        await s3.make_bucket("submissions", os.getenv("S3_REGION", 'ru_1'))
 
 
 async def __init_model() -> YOLO:
@@ -51,6 +55,11 @@ async def __init_classifier():
     model.eval()
     
     return model
+
+async def __init_CLIP():
+    clip_model, preprocessor = clip.load("ViT-B/32", device=0)
+    clip_model.eval()
+    return [clip_model, preprocessor]
 
 
 @asynccontextmanager
@@ -65,6 +74,12 @@ async def lifespan(app: FastAPI):
 
     models['detector'] = await __init_model()
     models['classifier']  = await __init_classifier()
+
+
+    [clip_model, preprocessor] = await __init_CLIP()
+
+    models['clip'] = clip_model
+    models['preprocessor']  = preprocessor
 
     yield
     # On shutdown 

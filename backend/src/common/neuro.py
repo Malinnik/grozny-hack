@@ -2,12 +2,17 @@ from itertools import repeat
 import PIL
 import PIL.Image
 
+import json
+
 import cv2
 from loguru import logger
 import numpy as np
 
 import torch
+import clip
+import torch.nn.functional as F
 from torchvision.transforms.functional import normalize
+from torchvision import transforms
 
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
@@ -70,6 +75,10 @@ class_to_text = {
     20:"Wolverine"
 }
 
+
+
+
+
 MEAN = [123.675, 116.28, 103.535]
 STD = [58.395, 57.12, 57.375]
 
@@ -99,6 +108,70 @@ async def bbox(img: PIL.Image.Image, cls, box, conf, use_label, show_conf):
 
     return img
         
+@torch.no_grad()
+async def predict_with_clip(img: PIL.Image.Image, filename: str, clip_model, preprocessor, model, use_label: bool = False, show_conf:bool = False):
+    with open("config.json", 'r') as file:
+        config = json.loads(file.read())
+        queries = config["queries"]
+        labels  = config["labels"]
+
+    tokenized_queries = [clip.tokenize(query).to(0) for query in queries]
+    text_embeddings = [clip_model.encode_text(tq) for tq in tokenized_queries]
+    for i in range(len(text_embeddings)):
+        text_embeddings[i] = text_embeddings[i].mean(dim=0, keepdim=True)
+        text_embeddings[i] = F.normalize(text_embeddings[i], p=2, dim=-1)
+    
+    list_predictions = []
+
+            # Inference detector
+    results_det = model.predict(img)
+
+
+    # Extract crop by bboxes
+    dict_crops = extract_crops(results_det, [768, 768])
+
+    # Inference classificator
+    for img_name, batch_images_cls in dict_crops.items():
+        
+        # if len(batch_images_cls) > classificator_config.batch_size:
+        num_packages_cls = np.ceil(len(batch_images_cls) / BATCH_SIZE).astype(np.int32)
+        for j in range(num_packages_cls):
+            batch_images_cls = batch_images_cls[BATCH_SIZE * j:
+                                                BATCH_SIZE * (1 + j)]
+
+            class_names = []
+            classes = []
+            similarities = []
+            for cropped_image_ in batch_images_cls:
+                cropped_image = preprocessor(transforms.functional.to_pil_image(cropped_image_)).unsqueeze(0).to(0)
+
+                best_label = -1
+                best_class = 0
+                max_similarity = -np.inf
+                for i, (text_emb, label) in enumerate(zip(text_embeddings, labels)):
+                    image_emb = clip_model.encode_image(cropped_image)
+                    image_emb = F.normalize(image_emb, p=2, dim=-1)
+
+                    similarity = torch.dot(image_emb.view(-1), text_emb.view(-1))
+                    if similarity > max_similarity:
+                        max_similarity = similarity
+                        best_label = label
+                        best_class = i
+                class_names.append(best_label)
+                similarities.append(max_similarity.item())
+                classes.append(best_class)
+
+            list_predictions.extend([[filename, cls, prob] for cls, prob in
+                                        zip(class_names, similarities)])
+
+
+    for i in range(len(classes)):
+        img = await bbox(img, classes[i], box=results_det[0].boxes[i], conf=similarities[i], use_label=use_label, show_conf=show_conf)
+
+
+    return [img, list_predictions]
+    
+
 
 
 
