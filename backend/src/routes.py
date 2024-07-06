@@ -13,7 +13,7 @@ from miniopy_async import Minio
 
 from annotations.objects import ImageAddDTO
 from common.registrations import generate_registrations, get_exif_date, set_predictions
-from common.neuro import predict_image
+from common.neuro import predict_image, predict_with_clip
 from common.db.pg_image import add_image_to_db, get_image_path
 from core.services import services, models
 
@@ -84,6 +84,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         df.to_csv(contents, index=False)
         contents.seek(0)
 
+
         await s3.put_object("submissions", f"submission-{datetime.now()}.csv", contents, contents.getbuffer().nbytes)
         contents.seek(0)
         contents = contents.read()
@@ -104,6 +105,8 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         # read zip from contents
         with zipfile.ZipFile(io.BytesIO(contents)) as zip:
             for file in zip.namelist():
+                if "/" not in file:
+                    continue
                 logger.debug(f"{file=}")
                 # 1/name.jpg
                 with zip.open(file) as f:
@@ -126,7 +129,8 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
                             s3:Minio = services['s3_client']
                             id: uuid.UUID = uuid.uuid4()
 
-                            filename: str = f"{id}.png"
+                            _ = file.split("/")[0]
+                            filename: str = f"{_}/{id}.png"
 
                             await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
                             await s3.put_object("data", filename, contents, contents.getbuffer().nbytes)
@@ -140,19 +144,20 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
                         return Response(status_code=500)
 
 
-        predictions = pd.DataFrame(list_all_predictions, columns=["link", "class_name_predicted", "confidence", "exif"])
+        predictions = set_predictions(list_all_predictions)
         
         registrations = generate_registrations(predictions)
 
         # file
         df = pd.DataFrame(registrations)
         df.to_csv('submission.csv', index=False)
-        print('Saved to submission.csv')
-
 
         # bytes
         contents = io.BytesIO()
         df.to_csv(contents, index=False)
+        contents.seek(0)
+
+        await s3.put_object("submissions", f"submission-{datetime.now()}.csv", contents, contents.getbuffer().nbytes)
         contents.seek(0)
         contents = contents.read()
         
