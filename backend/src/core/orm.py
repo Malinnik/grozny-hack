@@ -41,7 +41,7 @@ class ImagesModel(Base):
 class SubmissionsModel(Base):
     __tablename__ = "submissions"
     id: Mapped[intpk]
-    bucket: Mapped[str_60]
+    bucket: Mapped[str_60] = mapped_column(default="submissions")
     path: Mapped[str] = mapped_column(unique=True)
 
     created_at: Mapped[created_at]

@@ -28,7 +28,7 @@ async def __create_db_engine() -> AsyncEngine:
 async def __create_db_tables(engine: AsyncEngine) -> None:
     async with engine.begin() as session:
         # FIX: coment line below before deploying server
-        await session.run_sync(Base.metadata.drop_all)
+        # await session.run_sync(Base.metadata.drop_all)
         await session.run_sync(Base.metadata.create_all)
 
 

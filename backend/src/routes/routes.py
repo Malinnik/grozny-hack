@@ -11,11 +11,13 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from miniopy_async import Minio
 
-from annotations.objects import ImageAddDTO
+from annotations.objects import ImageAddDTO, Submission, SubmissionAddDTO, SubmissionUpdateDTO
+from common.db.pg_submissions import add_submission, set_submission_status
 from common.registrations import generate_registrations, get_exif_date, set_predictions
 from common.neuro import predict_image, predict_with_clip
 from common.db.pg_image import add_image_to_db, get_image_path
 from core.services import services, models
+from core.orm import SubmissionStatus
 
 
 router = APIRouter()
@@ -25,6 +27,10 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
     try:
         contents = await file.read()
         
+        submission_name = f"submission-{datetime.now()}.csv"
+        res = await add_submission(SubmissionAddDTO(path=submission_name))
+        subm = Submission.model_validate(res)
+
         list_all_predictions = []
         # read zip from contents
         with zipfile.ZipFile(io.BytesIO(contents)) as zip:
@@ -66,6 +72,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
                             
                     
                     except Exception as e:
+                        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Exited))
                         logger.exception(e)
                         return Response(status_code=500)
 
@@ -85,7 +92,8 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         contents.seek(0)
 
 
-        await s3.put_object("submissions", f"submission-{datetime.now()}.csv", contents, contents.getbuffer().nbytes)
+        await s3.put_object("submissions", submission_name, contents, contents.getbuffer().nbytes)
+        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Ready))
         contents.seek(0)
         contents = contents.read()
         
@@ -93,6 +101,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
 
 
     except Exception as e:
+        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Exited))
         logger.exception(e)
         return Response(status_code=500)
 
@@ -100,7 +109,12 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
 async def create_upload_file(file: UploadFile = File(...), use_label: bool = Form(False), shof_conf: bool = Form(False)):
     try:
         contents = await file.read()
-        
+
+        submission_name = f"submission-{datetime.now()}.csv"
+        res = await add_submission(SubmissionAddDTO(path=submission_name))
+        subm = Submission.model_validate(res)
+
+
         list_all_predictions = []
         # read zip from contents
         with zipfile.ZipFile(io.BytesIO(contents)) as zip:
@@ -140,6 +154,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
                             
                     
                     except Exception as e:
+                        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Exited))
                         logger.exception(e)
                         return Response(status_code=500)
 
@@ -157,7 +172,8 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         df.to_csv(contents, index=False)
         contents.seek(0)
 
-        await s3.put_object("submissions", f"submission-{datetime.now()}.csv", contents, contents.getbuffer().nbytes)
+        await s3.put_object("submissions", submission_name, contents, contents.getbuffer().nbytes)
+        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Ready))
         contents.seek(0)
         contents = contents.read()
         
@@ -165,6 +181,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
 
 
     except Exception as e:
+        await set_submission_status(SubmissionUpdateDTO(id=subm.id, status=SubmissionStatus.Exited))
         logger.exception(e)
         return Response(status_code=500)
 
@@ -231,7 +248,6 @@ async def get_file_by_id(id: uuid.UUID):
     [bucket, path] = _ 
     logger.debug(f"file: {bucket}/{path}")
 
-    obj = await s3.list_objects("data")
     try:
         async with aiohttp.ClientSession() as session:
             response = await s3.get_object(bucket, path, session)
