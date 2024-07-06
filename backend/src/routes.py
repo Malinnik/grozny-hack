@@ -1,10 +1,8 @@
 import io
 import zipfile
-import PIL
 import PIL.Image
 import aiohttp
 import uuid
-import cv2
 from fastapi import APIRouter, File, Response, UploadFile, Form
 
 from fastapi.responses import StreamingResponse
@@ -24,21 +22,27 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
     try:
         contents = await file.read()
         
-        logger.debug(f"{use_label=}      {shof_conf=}")
+        # read zip from contents
 
-        s3:Minio = services['s3_client']
-        
-        id: uuid.UUID = uuid.uuid4()
-        
-        # Set Filename
-        _ = file.filename.split(".")
-        _[0] = str(id) + '.'
-        filename: str = "".join(_)
-        
-        logger.debug(f"{filename=}")
+        # read files from zip file
 
-        await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
-        await s3.put_object("data", filename, io.BytesIO(contents), len(contents))
+
+
+        # logger.debug(f"{use_label=}      {shof_conf=}")
+
+        # s3:Minio = services['s3_client']
+        
+        # id: uuid.UUID = uuid.uuid4()
+        
+        # # Set Filename
+        # _ = file.filename.split(".")
+        # _[0] = str(id) + '.'
+        # filename: str = "".join(_)
+        
+        # logger.debug(f"{filename=}")
+
+        # await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
+        # await s3.put_object("data", filename, io.BytesIO(contents), len(contents))
         
         return Response(contents, media_type="image/*")
     except Exception as e:
