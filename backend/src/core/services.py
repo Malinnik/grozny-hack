@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 from miniopy_async import Minio
+import torch
 from ultralytics import YOLO
 
 from core.orm import Base
@@ -45,6 +46,13 @@ async def __init_bucket(s3: Minio):
 async def __init_model() -> YOLO:
     return YOLO("best.pt")
 
+async def __init_classifier():
+    model = torch.load("best_classifier.pt")
+    model.eval()
+    
+    return model
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -56,6 +64,7 @@ async def lifespan(app: FastAPI):
     await __init_bucket(services['s3_client'])
 
     models['detector'] = await __init_model()
+    models['classifier']  = await __init_classifier()
 
     yield
     # On shutdown 

@@ -55,7 +55,7 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         contents = await file.read()
         
         with PIL.Image.open(io.BytesIO(contents)) as img:
-            img = await predict_image(img, models['detector'], use_label=use_label, show_conf=shof_conf)
+            img = await predict_image(img, models['classifier'], models['detector'], use_label=use_label, show_conf=shof_conf)
 
             contents = io.BytesIO()
             img.save(contents, format="PNG")
