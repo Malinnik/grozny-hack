@@ -1,4 +1,6 @@
 import os
+import clip
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
@@ -54,6 +56,11 @@ async def __init_classifier():
     
     return model
 
+async def __init_CLIP():
+    clip_model, preprocessor = clip.load("ViT-B/32", device=0)
+    clip_model.eval()
+    return [clip_model, preprocessor]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -67,6 +74,12 @@ async def lifespan(app: FastAPI):
 
     models['detector'] = await __init_model()
     models['classifier']  = await __init_classifier()
+
+
+    [clip_model, preprocessor] = await __init_CLIP()
+
+    models['clip'] = clip_model
+    models['preprocessor']  = preprocessor
 
     yield
     # On shutdown 

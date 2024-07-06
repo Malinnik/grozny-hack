@@ -95,7 +95,73 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
         logger.exception(e)
         return Response(status_code=500)
 
+@router.post("/v1/archive/upload/clip", tags=["Test"])
+async def create_upload_file(file: UploadFile = File(...), use_label: bool = Form(False), shof_conf: bool = Form(False)):
+    try:
+        contents = await file.read()
+        
+        list_all_predictions = []
+        # read zip from contents
+        with zipfile.ZipFile(io.BytesIO(contents)) as zip:
+            for file in zip.namelist():
+                logger.debug(f"{file=}")
+                # 1/name.jpg
+                with zip.open(file) as f:
+                    contents = f.read()
+                    try:
+                        with PIL.Image.open(io.BytesIO(contents)) as img:
+                            exif = get_exif_date(img, file)
+                            
+                            [img, list_predictions] = await predict_with_clip(img, file, models['clip'], models['preprocessor'], models['detector'] ,use_label=use_label, show_conf=shof_conf)
 
+                            list_predictions = [i + [exif] for i in list_predictions]
+                            logger.debug(f"{list_predictions=}")
+
+                            list_all_predictions.extend(list_predictions)
+                            
+                            contents = io.BytesIO()
+                            img.save(contents, format="PNG")
+                            contents.seek(0)
+
+                            s3:Minio = services['s3_client']
+                            id: uuid.UUID = uuid.uuid4()
+
+                            filename: str = f"{id}.png"
+
+                            await add_image_to_db(ImageAddDTO(id=id, bucket="data", path=filename))
+                            await s3.put_object("data", filename, contents, contents.getbuffer().nbytes)
+                            contents.seek(0)
+
+                            contents = contents.read()
+                            
+                    
+                    except Exception as e:
+                        logger.exception(e)
+                        return Response(status_code=500)
+
+
+        predictions = pd.DataFrame(list_all_predictions, columns=["link", "class_name_predicted", "confidence", "exif"])
+        
+        registrations = generate_registrations(predictions)
+
+        # file
+        df = pd.DataFrame(registrations)
+        df.to_csv('submission.csv', index=False)
+        print('Saved to submission.csv')
+
+
+        # bytes
+        contents = io.BytesIO()
+        df.to_csv(contents, index=False)
+        contents.seek(0)
+        contents = contents.read()
+        
+        return Response(contents, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=submission.csv"})
+
+
+    except Exception as e:
+        logger.exception(e)
+        return Response(status_code=500)
 
 
 
