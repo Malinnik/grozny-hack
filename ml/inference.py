@@ -5,7 +5,7 @@ from confz import BaseConfig, FileSource
 import os
 import torch
 import numpy as np
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from utils.utils import load_detector, load_classificator, open_mapping, extract_crops
 import pandas as pd
 from itertools import repeat
@@ -118,7 +118,7 @@ def predict_with_fallback_to_clip(pathes_to_imgs, queries, labels):
                                    imgsz=detector_config.imgsz,
                                    verbose=False,
                                    device=device)
-            filename = '/'.join(str(batch_images_det[0].replace('\\', '/')).split('/')[-2:])
+            filename = '/'.join(str(batch_images_det[0]).replace('\\', '/').split('/')[-2:])
 
             if len(results_det) > 0:
                 # Extract crop by bboxes
@@ -146,7 +146,7 @@ def predict_with_fallback_to_clip(pathes_to_imgs, queries, labels):
                         class_names = [mapping[top_class_idx[idx]] for idx, _ in enumerate(batch_images_cls)]
 
                         # fallback to CLIP
-                        if sum([cls == 'Empty' for cls in class_names]) or top_p < 0.2:
+                        if sum([cls == 'Empty' for cls in class_names]) or top_p[0] < 0.2:
                             class_names = []
                             similarities = []
                             for cropped_image_ in batch_images_cls:
@@ -165,11 +165,15 @@ def predict_with_fallback_to_clip(pathes_to_imgs, queries, labels):
                                 class_names.append(best_label)
                                 similarities.append(max_similarity.item())
 
-                        list_predictions.extend([[filename, cls, prob] for cls, prob in
-                                                 zip(class_names, similarities)])
+                            list_predictions.extend([[filename, cls, prob] for cls, prob in
+                                                        zip(class_names, similarities)])
+                        else:
+                            list_predictions.extend([[filename, cls, prob] for name, cls, prob in
+                                                 zip(repeat(img_name, len(class_names)), class_names, top_p)])
+
     return list_predictions
 
-if True:
+if False:
     predictions = pd.read_csv('predictions.csv')
 else:
     import json
@@ -181,7 +185,7 @@ else:
     list_predictions = predict_with_fallback_to_clip(pathes_to_imgs, queries, labels)
     predictions = pd.DataFrame(list_predictions, columns=["link", "class_name_predicted", "confidence"])
 
-predictions_path = f'predictions{datetime.now()}.csv'
+predictions_path = 'predictions.csv'
 predictions.to_csv(predictions_path, index=False)
 print(f'Saved to {predictions_path}')
 
@@ -204,7 +208,7 @@ def generate_registrations(predictions):
         classes = []
         counts = []
         for shortpath, obj in group.groupby('link'):
-            path = path_to_dataset+shortpath
+            path = args.path_to_dataset+shortpath
 
             counts.append(min(len(obj), 5))
             dates.append(get_date_taken(path))
@@ -268,7 +272,7 @@ def generate_registrations_with_windows(predictions):
         classes = []
         counts = []
         for shortpath, obj in group.groupby('link'):
-            path = path_to_dataset+shortpath
+            path = args.path_to_dataset+shortpath
 
             counts.append(min(len(obj), 5))
             dates.append(get_date_taken(path))
@@ -322,5 +326,5 @@ def save_registrations(regs, out='submission.csv'):
     print(f'Saved to {out}')
 
 regs_path = f'submission_{datetime.now()}.csv'
-save_registrations(regs, regs_path)
+save_registrations(reqs, regs_path)
 print(f'Saved to {regs_path}')

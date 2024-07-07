@@ -1,13 +1,13 @@
 src_dir: "data"
 mapping: "class_map_animal.txt"
-device: cpu
+device: cuda
 dst_save_table: "data/table.csv"
 
 detector:
   weights: "weights/detection/yolov8n.pt"
   batch_size: 1
   iou: 0.45
-  conf: 0.4
+  conf: 0.2
   imgsz:
     - 640
     - 640
