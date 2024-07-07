@@ -32,6 +32,9 @@ class Image(BaseModel):
             "path": self.path,
             "date": str(self.date),
     }
+class ImagesIds(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID4
 
 
 class SubmissionAddDTO(BaseModel):

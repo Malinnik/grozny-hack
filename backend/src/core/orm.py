@@ -37,7 +37,7 @@ class ImagesModel(Base):
     path: Mapped[str] = mapped_column(unique=True)
 
     created_at: Mapped[created_at]
-    
+
 class SubmissionsModel(Base):
     __tablename__ = "submissions"
     id: Mapped[intpk]
