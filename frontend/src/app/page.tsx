@@ -1,8 +1,6 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
-import RecentChecks from "@/components/RecentChecks";
-import LineChart from "@/components/LineChart";
 import { useEffect, useState } from "react";
 import SubmissionTable from "@/components/SubmissionsTable";
 
@@ -26,7 +24,7 @@ export default function Plot() {
         "Content-Type": "application/json",
       }
     })
-    result.then((response) => {
+    .then((response) => {
       console.log(response)
       if (response.ok) {
         return response.json();
@@ -43,10 +41,6 @@ export default function Plot() {
     <Sidebar active={"first"}>
       <div className="bg-gray-100 h-screen">
         <div className="p-4 grid md:grid-cols-3 grid-cols-1 gap-4 h-screen overflow-y-scroll">
-            {/* <LineChart />
-            <RecentChecks/>
-            <RecentChecks/>
-            <LineChart /> */}
             <SubmissionTable data={submissions}/>
         </div>
       </div>

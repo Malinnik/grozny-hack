@@ -77,7 +77,8 @@ export default function Home() {
     setSended(true);
 
     if (isImageSelected) {
-      handleImageSubmit();
+      removeSelectedImage();
+      // handleImageSubmit()
       return
     }
     if (isArchiveSelected) {
