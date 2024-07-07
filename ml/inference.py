@@ -15,6 +15,7 @@ from datetime import datetime
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+import clip
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('path_to_dataset', help='Путь к датасету')
@@ -44,6 +45,9 @@ classificator_config = main_config.classificator
 # Load models
 detector = load_detector(detector_config).to(device)
 classificator = load_classificator(classificator_config).to(device)
+
+clip_model, preprocessor = clip.load("ViT-B/32", device=device)
+clip_model.eval()
 
 def predict_with_baseline():
     if len(pathes_to_imgs) == 0:
@@ -89,6 +93,81 @@ def predict_with_baseline():
 
                         list_predictions.extend([[filename, cls, prob] for name, cls, prob in
                                                  zip(repeat(img_name, len(class_names)), class_names, top_p)])
+
+def predict_with_fallback_to_clip(pathes_to_imgs, queries, labels):
+    if len(pathes_to_imgs) == 0:
+        return
+
+    tokenized_queries = [clip.tokenize(query).to(device) for query in queries]
+    text_embeddings = [clip_model.encode_text(tq) for tq in tokenized_queries]
+    for i in range(len(text_embeddings)):
+        text_embeddings[i] = text_embeddings[i].mean(dim=0, keepdim=True)
+        text_embeddings[i] = F.normalize(text_embeddings[i], p=2, dim=-1)
+
+    list_predictions = []
+
+    num_packages_det = np.ceil(len(pathes_to_imgs) / 1).astype(np.int32)
+    with torch.no_grad():
+        for i in tqdm(range(num_packages_det), colour="green"):
+            # Inference detector
+            batch_images_det = pathes_to_imgs[1 * i:
+                                              1 * (1 + i)]
+            results_det = detector(batch_images_det,
+                                   iou=detector_config.iou,
+                                   conf=detector_config.conf,
+                                   imgsz=detector_config.imgsz,
+                                   verbose=False,
+                                   device=device)
+            filename = '/'.join(str(batch_images_det[0].replace('\\', '/')).split('/')[-2:])
+
+            if len(results_det) > 0:
+                # Extract crop by bboxes
+                dict_crops = extract_crops(results_det, config=classificator_config)
+
+                # Inference classificator
+                for img_name, batch_images_cls in dict_crops.items():
+
+                    # if len(batch_images_cls) > classificator_config.batch_size:
+                    num_packages_cls = np.ceil(len(batch_images_cls) / classificator_config.batch_size).astype(np.int32)
+                    for j in range(num_packages_cls):
+                        batch_images_cls = batch_images_cls[classificator_config.batch_size * j:
+                                                            classificator_config.batch_size * (1 + j)]
+
+                        batch_images_cls = batch_images_cls[classificator_config.batch_size * j:
+                                                            classificator_config.batch_size * (1 + j)]
+                        logits = classificator(batch_images_cls.to(device))
+                        probabilities = torch.nn.functional.softmax(logits, dim=1)
+                        top_p, top_class_idx = probabilities.topk(1, dim=1)
+
+                        # Locate torch Tensors to cpu and convert to numpy
+                        top_p = top_p.cpu().numpy().ravel()
+                        top_class_idx = top_class_idx.cpu().numpy().ravel()
+
+                        class_names = [mapping[top_class_idx[idx]] for idx, _ in enumerate(batch_images_cls)]
+
+                        # fallback to CLIP
+                        if sum([cls == 'Empty' for cls in class_names]) or top_p < 0.2:
+                            class_names = []
+                            similarities = []
+                            for cropped_image_ in batch_images_cls:
+                                cropped_image = preprocessor(transforms.functional.to_pil_image(cropped_image_)).unsqueeze(0).to(device)
+
+                                best_label = -1
+                                max_similarity = -np.inf
+                                for text_emb, label in zip(text_embeddings, labels):
+                                    image_emb = clip_model.encode_image(cropped_image)
+                                    image_emb = F.normalize(image_emb, p=2, dim=-1)
+
+                                    similarity = torch.dot(image_emb.view(-1), text_emb.view(-1))
+                                    if similarity > max_similarity:
+                                        max_similarity = similarity
+                                        best_label = label
+                                class_names.append(best_label)
+                                similarities.append(max_similarity.item())
+
+                        list_predictions.extend([[filename, cls, prob] for cls, prob in
+                                                 zip(class_names, similarities)])
+    return list_predictions
 
 if True:
     predictions = pd.read_csv('predictions.csv')
