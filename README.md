@@ -4,7 +4,7 @@
 
 Для распознавания использовалась foundation model CLIP от компании OpenAI.
 
-![Пример распознавания сварочного шва](https://github.com/Malinnik/grozny-hack/blob/main/docs/%D0%BC%D0%B8%D1%88%D0%BA%D0%B0.jpg))
+![Пример распознавания сварочного шва](https://github.com/Malinnik/grozny-hack/blob/main/docs/%D0%BC%D0%B8%D1%88%D0%BA%D0%B0.jpg)
 
 ---
 **Участники**
