@@ -172,7 +172,13 @@ def predict_with_fallback_to_clip(pathes_to_imgs, queries, labels):
 if True:
     predictions = pd.read_csv('predictions.csv')
 else:
-    list_predictions = predict_with_baseline()
+    import json
+    with open("clip_configuration.json", 'r') as file:
+        config = json.loads(file.read())
+        queries = config["queries"]
+        labels  = config["labels"]
+    # list_predictions = predict_with_baseline()
+    list_predictions = predict_with_fallback_to_clip(pathes_to_imgs, queries, labels)
     predictions = pd.DataFrame(list_predictions, columns=["link", "class_name_predicted", "confidence"])
 
 predictions_path = f'predictions{datetime.now()}.csv'
