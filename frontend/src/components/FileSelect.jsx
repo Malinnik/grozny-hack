@@ -11,7 +11,7 @@ const FileSelect = ({isSended = false, isImageSelected = false, handleImageChang
               file:disabled:opacity-50 file:disabled:pointer-events-none
               file:border file:border-blue-500 hover:border-transparent rounded
               file:text-blue-700 file:bg-white" 
-              disabled={isSended} id="get_image_input" type="file" name="image" accept="image/*,zip,application/octet-stream,application/zip,application/x-zip,application/x-zip-compressed" onChange={handleImageChange} />
+              disabled={isSended} id="get_image_input" type="file" name="image" accept="zip,application/octet-stream,application/zip,application/x-zip,application/x-zip-compressed" onChange={handleImageChange} />
             }
             {isImageSelected && (
               <>

@@ -67,7 +67,7 @@ export default function Home() {
     return (
       <Sidebar active={'third'}>
         <div className="bg-gray-100">
-          <div className="bg-white border max-h-[70hv] rounded-lg m-8 p-8 grid md:grid-cols-2 lg:grid-cols-3 grid-cols-1 gap-4 h-[80%]">
+          <div className="bg-white border max-h-[70hv] rounded-lg m-8 p-8 grid md:grid-cols-2 lg:grid-cols-3 grid-cols-1 gap-4 h-[70hv%]">
               {
                 ids.map((id) => (
                   <ImageCard key={id.id} id={id.id}/>

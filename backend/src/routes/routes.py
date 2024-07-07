@@ -54,8 +54,12 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
 
                             list_all_predictions.extend(list_predictions)
                             
-                            contents = io.BytesIO()
-                            img.save(contents, format="PNG")
+                            # Сжать изображение
+                            img: PIL.Image.Image
+                            img = img.resize((512,256), PIL.Image.Resampling.LANCZOS)
+
+                            contents = io.BytesIO()                            
+                            img.save(contents, format="PNG", optimize=True, quality=85)
                             contents.seek(0)
 
                             s3:Minio = services['s3_client']
