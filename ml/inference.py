@@ -45,7 +45,9 @@ classificator_config = main_config.classificator
 detector = load_detector(detector_config).to(device)
 classificator = load_classificator(classificator_config).to(device)
 
-if len(pathes_to_imgs):
+def predict_with_baseline():
+    if len(pathes_to_imgs) == 0:
+        return
 
     list_predictions = []
 
@@ -88,7 +90,12 @@ if len(pathes_to_imgs):
                         list_predictions.extend([[filename, cls, prob] for name, cls, prob in
                                                  zip(repeat(img_name, len(class_names)), class_names, top_p)])
 
-predictions = pd.DataFrame(list_predictions, columns=["link", "class_name_predicted", "confidence"])
+if True:
+    predictions = pd.read_csv('predictions.csv')
+else:
+    list_predictions = predict_with_baseline()
+    predictions = pd.DataFrame(list_predictions, columns=["link", "class_name_predicted", "confidence"])
+
 predictions_path = f'predictions{datetime.now()}.csv'
 predictions.to_csv(predictions_path, index=False)
 print(f'Saved to {predictions_path}')
