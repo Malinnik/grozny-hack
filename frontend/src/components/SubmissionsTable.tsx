@@ -31,7 +31,7 @@ const SubmissionTable = ({data}: {data: Submission[]}) => {
                     </tr>
                 </thead>
                 <tbody >
-                    {data.map((submission, index) => (
+                    {data.slice(0).reverse().map((submission, index) => (
                     <tr key={index} className="bg-white border-b hover:bg-gray-200 ">
                         <td className="px-6 py-4 text-center font-medium text-gray-900 whitespace-nowrap">{submission.id}</td>
                         <td className="px-6 py-4 text-center">{submission.path}</td>

@@ -11,11 +11,11 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from miniopy_async import Minio
 
-from annotations.objects import ImageAddDTO, Submission, SubmissionAddDTO, SubmissionUpdateDTO
+from annotations.objects import ImageAddDTO, ImagesIds, Submission, SubmissionAddDTO, SubmissionUpdateDTO
 from common.db.pg_submissions import add_submission, set_submission_status
 from common.registrations import generate_registrations, get_exif_date, set_predictions
 from common.neuro import predict_image, predict_with_clip
-from common.db.pg_image import add_image_to_db, get_image_path
+from common.db.pg_image import add_image_to_db, get_image_path, get_images_ids, get_max_pages
 from core.services import services, models
 from core.orm import SubmissionStatus
 
@@ -237,7 +237,7 @@ async def get_file_test():
         
     return StreamingResponse(body, media_type="image/*")
 
-@router.get("/v2/test/download", tags=["Download"])
+@router.get("/v2/images/download", tags=["Images"])
 async def get_file_by_id(id: uuid.UUID):
     s3: Minio = services['s3_client']
     
@@ -261,6 +261,24 @@ async def get_file_by_id(id: uuid.UUID):
     #     response.release()
         
     return StreamingResponse(body, media_type="image/*")
+
+@router.get("/v1/images", tags=["Images"])
+async def get_images(page: int):
+    try:
+        result = await get_images_ids(page)
+        ids = [ImagesIds.model_validate(i) for i in result]
+        return ids
+    except Exception as e:
+        logger.error(e)
+
+@router.get("/v1/images/pages", tags=["Images"])
+async def get_pages_amount():
+    try:
+        result = await get_max_pages()
+        return result
+    except Exception as e:
+        logger.error(e)
+
 
 @router.get("/v1/test/zip", tags=["Download"])
 async def get_files():

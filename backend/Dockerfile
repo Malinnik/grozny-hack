@@ -2,6 +2,7 @@ FROM python:3.11.9-alpine3.20 as builder-base
 
 COPY requirements.txt .
 
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 
