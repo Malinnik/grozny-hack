@@ -55,7 +55,6 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
                             list_all_predictions.extend(list_predictions)
                             
                             # Сжать изображение
-                            img: PIL.Image.Image
                             img = img.resize((512,256), PIL.Image.Resampling.LANCZOS)
 
                             contents = io.BytesIO()                            
@@ -140,6 +139,8 @@ async def create_upload_file(file: UploadFile = File(...), use_label: bool = For
 
                             list_all_predictions.extend(list_predictions)
                             
+                            img = img.resize((512,256), PIL.Image.Resampling.LANCZOS)
+
                             contents = io.BytesIO()
                             img.save(contents, format="PNG")
                             contents.seek(0)
